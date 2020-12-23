@@ -57,16 +57,16 @@ def get_woeid(api, locations):
     # locations that Twitter has trending topics information for.
     trending_locations = api.trends_available()
     # dictionary with all trending locations and their respective woeid.
-    locations_woeid = {trending_location["name"].lower(): trending_location["woeid"]
+    location_woeid = {trending_location["name"].lower(): trending_location["woeid"]
                        for trending_location in trending_locations}
-    # fill the woeid list for the specific locations.
-    woeid = []
+    # fill the woeids list for the specific locations.
+    woeids = []
     for location in locations:
-        if location in locations_woeid.keys():
-            woeid.append(locations_woeid[location])
+        if location in location_woeid.keys():
+            woeids.append(location_woeid[location])
         else:
             print(f"get_woeid(api, locations): Error - {location} woeid does not exist in trending topics.")
-    return woeid
+    return woeids
 
 
 def get_tweets(api, query, lang):
@@ -100,4 +100,3 @@ def get_tweets(api, query, lang):
                        status.user.screen_name,
                        status.text])
     return tweets
-
