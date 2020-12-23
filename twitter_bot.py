@@ -36,3 +36,34 @@ def init_api():
     except tweepy.TweepError:
         print("init_api(): Error creating the API instance.")
         return None
+
+
+def get_woeid(api, locations):
+    """
+    Returns the list of WOEID for specific locations if they have trending
+    topics.
+
+    Args:
+        api (tweepy.api.API): API instance.
+        locations (list): A list of str values with locations names.
+
+    Returns:
+        A list of str values with WOEID.
+
+    References:
+        WOEID: https://blog.twitter.com/engineering/en_us/a/2010/woeids-in-twitters-trends.html
+        Tweepy Docs: http://docs.tweepy.org/en/latest/api.html?highlight=trends_available#API.trends_available
+    """
+    # locations that Twitter has trending topics information for.
+    trending_locations = api.trends_available()
+    # dictionary with all trending locations and their respective woeid.
+    locations_woeid = {trending_location["name"].lower(): trending_location["woeid"]
+                       for trending_location in trending_locations}
+    # fill the woeid list for the specific locations.
+    woeid = []
+    for location in locations:
+        if location in locations_woeid.keys():
+            woeid.append(locations_woeid[location])
+        else:
+            print(f"get_woeid(api, locations): Error - {location} woeid does not exist in trending topics.")
+    return woeid
