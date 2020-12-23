@@ -52,7 +52,7 @@ def get_woeid(api, locations):
 
     References:
         WOEID: https://blog.twitter.com/engineering/en_us/a/2010/woeids-in-twitters-trends.html
-        Tweepy Docs: http://docs.tweepy.org/en/latest/api.html?highlight=trends_available#API.trends_available
+        api.trends_available():http://docs.tweepy.org/en/latest/api.html?highlight=trends_available#API.trends_available
     """
     # locations that Twitter has trending topics information for.
     trending_locations = api.trends_available()
@@ -67,3 +67,37 @@ def get_woeid(api, locations):
         else:
             print(f"get_woeid(api, locations): Error - {location} woeid does not exist in trending topics.")
     return woeid
+
+
+def get_tweets(api, query, lang):
+    """
+    Returns a list of tweets for the given hashtag and language.
+
+    Args:
+        api (tweepy.api.API): API instance.
+        query (str): Hashtag.
+        lang (str): Tweets for the given language. Use ISO 639-1 code.
+
+    Returns:
+        A list of tweets, each tweet includes Id, hashtag, creation time, user handle, and tweet body.
+
+    References:
+        tweepy.Cursor(): http://docs.tweepy.org/en/latest/cursor_tutorial.html?highlight=cursor
+        api.search(): http://docs.tweepy.org/en/latest/api.html?highlight=api.search#API.search
+        ISO 639-1 codes: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+    """
+    tweets = []
+    # iterate over a fetched list for the given hashtag and language with a max of 1000 results per page
+    for status in tweepy.Cursor(api.search,
+                                q=query,
+                                count=1000,
+                                result_type="popular",
+                                lang=lang).items():
+        # insert a tweet in a list
+        tweets.append([status.id_str,
+                       query,
+                       status.created_at.strftime('%d-%m-%Y %H:%M'),
+                       status.user.screen_name,
+                       status.text])
+    return tweets
+
