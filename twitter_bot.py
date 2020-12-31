@@ -17,6 +17,7 @@ import csv
 import datetime
 import json
 import os
+import time
 import tweepy
 
 
@@ -37,7 +38,7 @@ def init_api() -> tweepy.API:
         api = tweepy.API(auth)
         return api
     except (FileNotFoundError, TypeError):
-        print("init_api(): Error creating the API instance.")
+        print("Error: The API instance can't be created.")
 
 
 def get_woeid(api, locations) -> list:
@@ -66,7 +67,7 @@ def get_woeid(api, locations) -> list:
         if location in location_woeid.keys():
             woeids.append(location_woeid[location])
         else:
-            print(f"get_woeid(api, locations): Error - {location} woeid does not exist in trending topics.")
+            print(f"Info: {location} woeid does not exist in trending topics.")
     return woeids
 
 
@@ -88,16 +89,52 @@ def get_tweets(api, query, lang) -> list:
         A list of tweets, each tweet includes Id, hashtag, creation time, user handle, and tweet body.
     """
     tweets = []
-    # iterate over a fetched list for the given hashtag and language with a max of 1000 results per page
+    # iterate over a fetched list for the given hashtag and language with a max of 1000 results per page.
     for status in tweepy.Cursor(api.search,
                                 q=query,
                                 count=1000,
                                 result_type="popular",
                                 lang=lang).items():
-        # insert a tweet in a list
+        # insert a tweet in a list.
         tweets.append([status.id_str,
                        query,
-                       status.created_at.strftime('%d-%m-%Y %H:%M'),
+                       status.created_at.strftime('%Y-%m-%d %H:%M'),
                        status.user.screen_name,
                        status.text])
     return tweets
+
+
+def get_trending_hashtags(api, locations) -> set:
+    """
+    Returns a set of the trending hashtags for the given locations.
+
+    Note: If you are working with a free developer account, you have a very limited
+    number of requests. if your hourly requests are exhausted, will wait for one hour and then resume.
+
+    Ref:
+        `api.trends_place(id) <http://docs.tweepy.org/en/latest/api.html?highlight=trends_place#API.trends_place>`_
+        `tweepy.TweepError <http://docs.tweepy.org/en/v3.5.0/api.html#TweepError>`_
+
+    Args:
+        api (tweepy.API): API instance.
+        locations (list): A list of str values with locations names.
+
+    Returns:
+        A set of the trending hashtags.
+    """
+    woeids = get_woeid(api, locations)
+    trending_hashtags = set()
+    # get the trends by woeid.
+    for woeid in woeids:
+        try:
+            trends = api.trends_place(woeid)
+        except tweepy.TweepError:
+            print("API limit exceeded. Waiting for next hour")
+            time.sleep(3605)  # change to 5 for testing.
+            trends = api.trends_place(woeid)
+        # store trending hashtags.
+        hashtags = [trend["name"] for trend in trends[0]["trends"]
+                    if trend["name"].find("#") == 0]
+        # update the set with new hashtags.
+        trending_hashtags.update(hashtags)
+    return trending_hashtags
