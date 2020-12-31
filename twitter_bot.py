@@ -20,12 +20,15 @@ import os
 import tweepy
 
 
-def init_api():
+def init_api() -> tweepy.API:
     """
     Initiate the API with the access keys in 'config.json' file and returns the API instance.
 
+    Ref:
+        `OAuth 2 Authentication <http://docs.tweepy.org/en/v3.9.0/auth_tutorial.html#oauth-2-authentication>`_
+
     Returns:
-        tweepy.api.API
+        api (tweepy.API): API instance.
     """
     try:
         with open("config.json", "r") as file:
@@ -33,32 +36,30 @@ def init_api():
         auth = tweepy.AppAuthHandler(config["API_KEY"], config["API_SECRET"])
         api = tweepy.API(auth)
         return api
-    except tweepy.TweepError:
+    except (FileNotFoundError, TypeError):
         print("init_api(): Error creating the API instance.")
-        return None
 
 
-def get_woeid(api, locations):
+def get_woeid(api, locations) -> list:
     """
-    Returns the list of WOEID for specific locations if they have trending
+    Returns the list of WOEIDs for specific locations if they have trending
     topics.
 
+    Ref:
+        `WOEID <https://blog.twitter.com/engineering/en_us/a/2010/woeids-in-twitters-trends.html>`_
+        `api.trends_available() <http://docs.tweepy.org/en/latest/api.html?highlight=trends_available#API.trends_available>`_
+
     Args:
-        api (tweepy.api.API): API instance.
+        api (tweepy.API): API instance.
         locations (list): A list of str values with locations names.
 
     Returns:
-        A list of str values with WOEID.
-
-    References:
-        WOEID: https://blog.twitter.com/engineering/en_us/a/2010/woeids-in-twitters-trends.html
-        api.trends_available():http://docs.tweepy.org/en/latest/api.html?highlight=trends_available#API.trends_available
+        A list of str values with WOEIDs.
     """
-    # locations that Twitter has trending topics information for.
     trending_locations = api.trends_available()
     # dictionary with all trending locations and their respective woeid.
     location_woeid = {trending_location["name"].lower(): trending_location["woeid"]
-                       for trending_location in trending_locations}
+                      for trending_location in trending_locations}
     # fill the woeids list for the specific locations.
     woeids = []
     for location in locations:
@@ -69,22 +70,22 @@ def get_woeid(api, locations):
     return woeids
 
 
-def get_tweets(api, query, lang):
+def get_tweets(api, query, lang) -> list:
     """
     Returns a list of tweets for the given hashtag and language.
 
+    Ref:
+        `tweepy.Cursor() <http://docs.tweepy.org/en/latest/cursor_tutorial.html?highlight=cursor>`_
+        `api.search() <http://docs.tweepy.org/en/latest/api.html?highlight=api.search#API.search>`_
+        `ISO 639-1 codes <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_
+
     Args:
-        api (tweepy.api.API): API instance.
+        api (tweepy.API): API instance.
         query (str): Hashtag.
         lang (str): Tweets for the given language. Use ISO 639-1 code.
 
     Returns:
         A list of tweets, each tweet includes Id, hashtag, creation time, user handle, and tweet body.
-
-    References:
-        tweepy.Cursor(): http://docs.tweepy.org/en/latest/cursor_tutorial.html?highlight=cursor
-        api.search(): http://docs.tweepy.org/en/latest/api.html?highlight=api.search#API.search
-        ISO 639-1 codes: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
     """
     tweets = []
     # iterate over a fetched list for the given hashtag and language with a max of 1000 results per page
