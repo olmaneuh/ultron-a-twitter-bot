@@ -48,7 +48,8 @@ def get_woeid(api, locations) -> list:
 
     Ref:
         `WOEID <https://blog.twitter.com/engineering/en_us/a/2010/woeids-in-twitters-trends.html>`_
-        `api.trends_available() <http://docs.tweepy.org/en/latest/api.html?highlight=trends_available#API.trends_available>`_
+        `api.trends_available() <http://docs.tweepy.org/en/latest/api.html?highlight=trends_available
+        #API.trends_available>`_
 
     Args:
         api (tweepy.API): API instance.
