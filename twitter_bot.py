@@ -72,6 +72,17 @@ def get_woeid(api, locations) -> list:
     return woeids
 
 
+def limit_handle(cursor):
+    """
+    http://docs.tweepy.org/en/latest/code_snippet.html?highlight=Cursor#handling-the-rate-limit-using-cursors
+    """
+    while True:
+        try:
+            yield next(cursor)
+        except tweepy.RateLimitError:
+            time.sleep(15 * 60)
+
+
 def get_tweets(api, query, lang) -> list:
     """
     Returns a list of tweets for the given hashtag and language.
@@ -99,7 +110,7 @@ def get_tweets(api, query, lang) -> list:
         # insert a tweet in a list.
         tweets.append([status.id_str,
                        query,
-                       status.created_at.strftime('%Y-%m-%d %H:%M'),
+                       status.created_at.strftime("%Y-%m-%d %H:%M"),
                        status.user.screen_name,
                        status.text])
     return tweets
@@ -130,7 +141,7 @@ def get_trending_hashtags(api, locations) -> set:
         try:
             trends = api.trends_place(woeid)
         except tweepy.TweepError:
-            print("API limit exceeded. Waiting for next hour")
+            print("Warning: API limit exceeded. Waiting for next hour")
             time.sleep(3605)  # change to 5 for testing.
             trends = api.trends_place(woeid)
         # store trending hashtags.
@@ -139,3 +150,27 @@ def get_trending_hashtags(api, locations) -> set:
         # update the set with new hashtags.
         trending_hashtags.update(hashtags)
     return trending_hashtags
+
+
+def twitter_bot(api, locations, lang):
+    today = datetime.datetime.today().strftime("%Y-%m-%d")
+    # create a folder to store the files with trending tweets.
+    if not os.path.exists("trending_tweets"):
+        os.mkdir("trending_tweets")
+    tweets_file = open("trending_tweets/" + today + "-tweets.csv", "a+")  # create a file to write tweets.
+    hashtags_file = open("trending_tweets/" + today + "-hashtags.csv", "w+")  # create a file to write hashtags.
+    # get the trending hashtags and save them in the file.
+    trending_hashtags = get_trending_hashtags(api, locations)
+    hashtags_file.write("\n".join(trending_hashtags))
+    hashtags_file.close()
+    print("Info: Hashtags written to file.")
+    # get the trending tweets and save them in the file.
+    writer = csv.writer(tweets_file)
+    for hashtag in trending_hashtags:
+        try:
+            print("Info: Getting Tweets for the hashtag:", hashtag)
+            tweets = get_tweets(api, hashtag, lang)
+            for tweet in tweets:
+                writer.writerow(tweet)
+        except tweepy.TweepError:
+            pass
