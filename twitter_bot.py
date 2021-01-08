@@ -72,15 +72,25 @@ def get_woeid(api, locations) -> list:
     return woeids
 
 
-def limit_handle(cursor):
+def cursor_limit_handle(cursor):
     """
-    http://docs.tweepy.org/en/latest/code_snippet.html?highlight=Cursor#handling-the-rate-limit-using-cursors
+    Handle "RateLimitErrors" raised by tweepy.Cursor while iterating.
+
+    Ref:
+        `Handling the rate limit using cursors <http://docs.tweepy.org/en/latest/code_snippet.html?highlight=Cursor
+        #handling-the-rate-limit-using-cursors>`_
+
+    Args:
+        cursor (tweepy.cursor.ItemIterator): Iterator for items in each page.
     """
     while True:
         try:
             yield next(cursor)
         except tweepy.RateLimitError:
-            time.sleep(15 * 60)
+            print("Warning: Cursor limit exceeded. Waiting 15 minutes.")
+            time.sleep(900)
+        except StopIteration:
+            return
 
 
 def get_tweets(api, query, lang) -> list:
@@ -102,11 +112,11 @@ def get_tweets(api, query, lang) -> list:
     """
     tweets = []
     # iterate over a fetched list for the given hashtag and language with a max of 1000 results per page.
-    for status in tweepy.Cursor(api.search,
-                                q=query,
-                                count=1000,
-                                result_type="popular",
-                                lang=lang).items():
+    for status in cursor_limit_handle(tweepy.Cursor(api.search,
+                                      q=query,
+                                      count=1000,
+                                      result_type="popular",
+                                      lang=lang).items()):
         # insert a tweet in a list.
         tweets.append([status.id_str,
                        query,
@@ -152,11 +162,22 @@ def get_trending_hashtags(api, locations) -> set:
     return trending_hashtags
 
 
-def twitter_bot(api, locations, lang):
+def twitter_bot(api, locations, lang) -> None:
+    """
+    Save trending hashtags and tweets in different csv files with a timestamp in the "trending_tweets" directory.
+
+     Ref:
+        `ISO 639-1 codes <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_
+
+    Args:
+        api (tweepy.API): API instance.
+        locations (list): A list of str values with locations names.
+        lang (str): Tweets for the given language. Use ISO 639-1 code.
+    """
     today = datetime.datetime.today().strftime("%Y-%m-%d")
     # create a folder to store the files with trending tweets.
     if not os.path.exists("trending_tweets"):
-        os.mkdir("trending_tweets")
+        os.makedirs("trending_tweets")
     tweets_file = open("trending_tweets/" + today + "-tweets.csv", "a+")  # create a file to write tweets.
     hashtags_file = open("trending_tweets/" + today + "-hashtags.csv", "w+")  # create a file to write hashtags.
     # get the trending hashtags and save them in the file.
@@ -167,10 +188,9 @@ def twitter_bot(api, locations, lang):
     # get the trending tweets and save them in the file.
     writer = csv.writer(tweets_file)
     for hashtag in trending_hashtags:
-        try:
-            print("Info: Getting Tweets for the hashtag:", hashtag)
-            tweets = get_tweets(api, hashtag, lang)
-            for tweet in tweets:
-                writer.writerow(tweet)
-        except tweepy.TweepError:
-            pass
+        print("Info: Getting Tweets for the hashtag:", hashtag)
+        tweets = get_tweets(api, hashtag, lang)
+        for tweet in tweets:
+            writer.writerow(tweet)
+    tweets_file.close()
+    print("Tweets written to file.")
