@@ -7,18 +7,32 @@
 
 Ultron is a Twitter bot that can fetch trending hashtags and tweets of different geographical locations.
 
-![demo](./images/demo.png)
+<table>
+  <tr>
+    <td>The following image shows an example of the bot running, notifying the user of the ongoing steps.</td>
+  </tr>
+  <tr>
+    <td><img src="./images/demo.png"/></td>
+  </tr>
+</table>
 
-_The previous image shows an example of the bot running, notifying the user of the ongoing steps._
+<table>
+  <tr>
+    <td>Example of the tweets file. You can review the following file: <a href="https://github.com/olmaneuh/ultron-a-twitter-bot/blob/main/trending_tweets/2021-01-12-tweets.csv">trending_tweets/2021-01-12-tweets.csv</a></td>
+  </tr>
+  <tr>
+    <td><img src="./images/file_example_1.png"/></td>
+  </tr>
+</table>
 
-![tweets file](./images/file_example_1.png)
-
-_Example of the tweets file. You can review the following file: [trending_tweets/2021-01-12-tweets.csv](https://github.com/olmaneuh/ultron-a-twitter-bot/blob/main/trending_tweets/2021-01-12-tweets.csv)._
-
-![tweets file](./images/file_example_2.png)
-
-_Example of the hashtag file. You can review the following file: [trending_tweets/2021-01-12-hashtags.csv](https://github.com/olmaneuh/ultron-a-twitter-bot/blob/main/trending_tweets/2021-01-12-hashtags.csv)._
-
+<table>
+  <tr>
+    <td>Example of the hashtag file. You can review the following file: <a href="https://github.com/olmaneuh/ultron-a-twitter-bot/blob/main/trending_tweets/2021-01-12-hashtags.csv">trending_tweets/2021-01-12-hashtags.csv</a></td>
+  </tr>
+  <tr>
+    <td><img src="./images/file_example_2.png"/></td>
+  </tr>
+</table>
 
 ## Requirements
 
